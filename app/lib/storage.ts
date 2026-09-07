@@ -30,6 +30,7 @@ export interface DayLog {
   dificultad?: number | null; // dificultad de seguir el plan 1–10
   adherencia?: boolean; // día de adherencia al plan
   registros?: RegistroComida[]; // comidas registradas del día
+  habitos?: string[]; // ids de buenos hábitos completados
 }
 
 export interface AppData {

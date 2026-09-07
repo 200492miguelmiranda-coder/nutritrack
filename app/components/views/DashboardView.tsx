@@ -5,6 +5,7 @@ import { NutriData } from "@/app/hooks/useNutriData";
 import { PlanDieta } from "@/app/lib/diet";
 import { Vista } from "@/app/components/Sidebar";
 import { kcalDelDia } from "@/app/lib/companion";
+import { HABITOS } from "@/app/lib/habitos";
 
 interface Props {
   nutri: NutriData;
@@ -20,7 +21,6 @@ export default function DashboardView({ nutri, plan, onIrA, onCrearDieta }: Prop
   const { logHoy, actualizarHoy, pesoInicial, pesoActual, pesoObjetivo, bajado, progreso, data } = nutri;
 
   const pesoDeHoy = logHoy.weight ?? pesoActual;
-  const habitos = [logHoy.waterMl >= META_AGUA, logHoy.sodaMl <= LIMITE_REFRESCO, logHoy.walked].filter(Boolean).length;
 
   const bloques = plan?.bloques ?? [];
 
@@ -84,11 +84,9 @@ export default function DashboardView({ nutri, plan, onIrA, onCrearDieta }: Prop
 
         <article className="card stat">
           <div className="statTop"><span className="chip c4"><Footprints size={16} /></span><span>Hábitos</span></div>
-          <strong>{habitos}/3</strong>
+          <strong>{logHoy.habitos?.length ?? 0}/{HABITOS.length}</strong>
           <div className="rowBtns">
-            <button className={logHoy.walked ? "btn btn-primary" : "btn"} onClick={() => actualizarHoy({ walked: !logHoy.walked })}>
-              {logHoy.walked ? "✓ Caminata" : "Caminata"}
-            </button>
+            <button className="btn" onClick={() => onIrA("habitos")}>Ver hábitos</button>
           </div>
         </article>
       </section>
