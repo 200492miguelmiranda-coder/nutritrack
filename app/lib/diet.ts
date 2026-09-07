@@ -18,6 +18,25 @@ export interface Perfil {
   preferencia: Preferencia;
   comidasPorDia: number; // 3 o 4
   evitar: string[]; // alimentos que no le gustan o no puede comer
+  // Campos adicionales (opcionales) para el perfil nutricional completo
+  horasSueno?: number; // horas de sueño habituales
+  comidasPrincipales?: number; // número de comidas principales al día
+  aceptaSnack?: boolean; // acepta colación/snack si tiene hambre
+  gustos?: string[]; // alimentos favoritos
+  estiloComida?: string[]; // económica, práctica, mexicana, etc.
+  equipoCasa?: string[]; // equipo de cocina en casa
+  equipoTrabajo?: string[]; // equipo disponible en el trabajo
+  tiempoPrep?: string; // tiempo disponible para preparar comida
+  trabajoHorario?: string; // horario laboral habitual
+  notas?: string; // notas libres del perfil
+}
+
+// Objetivos nutricionales de referencia. Son guías ajustables, no reglas rígidas.
+export interface ObjetivosNutricionales {
+  kcal: number;
+  proteina: [number, number]; // rango g/día
+  carbos: [number, number];
+  grasas: [number, number];
 }
 
 export interface OpcionComida {

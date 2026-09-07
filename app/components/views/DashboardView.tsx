@@ -1,9 +1,10 @@
 "use client";
 
-import { Droplets, CupSoda, Footprints, Scale, Plus, Minus, Sparkles } from "lucide-react";
+import { Droplets, CupSoda, Footprints, Scale, Plus, Minus, Sparkles, NotebookPen } from "lucide-react";
 import { NutriData } from "@/app/hooks/useNutriData";
 import { PlanDieta } from "@/app/lib/diet";
 import { Vista } from "@/app/components/Sidebar";
+import { kcalDelDia } from "@/app/lib/companion";
 
 interface Props {
   nutri: NutriData;
@@ -97,8 +98,21 @@ export default function DashboardView({ nutri, plan, onIrA, onCrearDieta }: Prop
         <section className="card meals">
           <div className="cardHead">
             <div><p className="eyebrow">Hoy</p><h2>Tu alimentación</h2></div>
-            {plan && <button className="btn" onClick={() => onIrA("dieta")}>Ver dieta</button>}
+            <button className="btn" onClick={() => onIrA("diario")}><NotebookPen size={14} /> Diario</button>
           </div>
+
+          {(logHoy.registros?.length ?? 0) > 0 && (
+            <div className="comido">
+              <div className="comidoHead"><span className="eyebrow">Comido hoy</span><b>~{kcalDelDia(logHoy.registros)} kcal</b></div>
+              {logHoy.registros!.map((r) => (
+                <div className="comidoItem" key={r.id}>
+                  <div className="ci"><b>{r.momento}</b><small>{r.kcalMin != null ? `~${r.kcalMax && r.kcalMax !== r.kcalMin ? `${r.kcalMin}–${r.kcalMax}` : r.kcalMin} kcal` : ""}</small></div>
+                  <p>{r.descripcion}</p>
+                </div>
+              ))}
+              <div className="planSep">Plan sugerido</div>
+            </div>
+          )}
 
           {plan ? (
             <div className="mealList">
@@ -178,6 +192,15 @@ export default function DashboardView({ nutri, plan, onIrA, onCrearDieta }: Prop
         .cardHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
         .card h2{font-size:20px;letter-spacing:-.4px}
         .meals,.habits{padding:22px}
+        .comido{margin-bottom:6px}
+        .comidoHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+        .comidoHead b{font-size:14px;color:var(--primary);font-family:var(--font-display),sans-serif}
+        .comidoItem{background:var(--surface-2);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+        .comidoItem .ci{display:flex;justify-content:space-between;align-items:baseline}
+        .comidoItem .ci b{font-size:13px}
+        .comidoItem .ci small{font-size:11px;color:var(--muted-2)}
+        .comidoItem p{margin:4px 0 0;font-size:12px;color:var(--muted);line-height:1.4}
+        .planSep{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted-2);font-weight:700;margin:14px 0 2px}
         .mealList{display:flex;flex-direction:column}
         .meal{display:flex;align-items:center;gap:14px;padding:15px 0;border-top:1px solid #edf0ee}
         .meal:first-child{border-top:none}

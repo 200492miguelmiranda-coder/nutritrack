@@ -10,7 +10,8 @@ import {
   fechaKey,
   guardarDatos,
 } from "@/app/lib/storage";
-import { Perfil } from "@/app/lib/diet";
+import { Perfil, ObjetivosNutricionales } from "@/app/lib/diet";
+import { RegistroComida } from "@/app/lib/storage";
 import { supabase } from "@/app/lib/supabase";
 
 export interface PuntoPeso {
@@ -91,8 +92,29 @@ export function useNutriData(userId: string | null) {
   }, [hoy]);
 
   const guardarPerfil = useCallback((perfil: Perfil) => {
-    setData((d) => ({ ...d, perfil, creado: d.perfil ? d.creado : fechaKey() }));
+    // Fusiona sobre el perfil existente para no perder campos adicionales
+    setData((d) => ({ ...d, perfil: { ...(d.perfil ?? {}), ...perfil }, creado: d.perfil ? d.creado : fechaKey() }));
   }, []);
+
+  const setObjetivos = useCallback((obj: ObjetivosNutricionales) => {
+    setData((d) => ({ ...d, objetivos: obj }));
+  }, []);
+
+  const agregarRegistro = useCallback((reg: RegistroComida) => {
+    setData((d) => {
+      const actual = d.logs[hoy] ?? diaVacio(hoy);
+      const registros = [...(actual.registros ?? []), reg];
+      return { ...d, logs: { ...d.logs, [hoy]: { ...actual, registros } } };
+    });
+  }, [hoy]);
+
+  const quitarRegistro = useCallback((id: string) => {
+    setData((d) => {
+      const actual = d.logs[hoy] ?? diaVacio(hoy);
+      const registros = (actual.registros ?? []).filter((r) => r.id !== id);
+      return { ...d, logs: { ...d.logs, [hoy]: { ...actual, registros } } };
+    });
+  }, [hoy]);
 
   const setTema = useCallback((patch: Partial<AppData["tema"]>) => {
     setData((d) => ({ ...d, tema: { ...d.tema, ...patch } }));
@@ -132,6 +154,9 @@ export function useNutriData(userId: string | null) {
     logHoy,
     actualizarHoy,
     guardarPerfil,
+    setObjetivos,
+    agregarRegistro,
+    quitarRegistro,
     setTema,
     setAvatar,
     reiniciar,

@@ -1,9 +1,9 @@
 "use client";
 
-import { LayoutDashboard, UtensilsCrossed, TrendingUp, ListChecks, UserRound } from "lucide-react";
+import { LayoutDashboard, UtensilsCrossed, NotebookPen, TrendingUp, ListChecks, UserRound } from "lucide-react";
 import { LogoMark, Wordmark } from "@/app/components/Logo";
 
-export type Vista = "inicio" | "dieta" | "progreso" | "habitos" | "perfil";
+export type Vista = "inicio" | "diario" | "dieta" | "progreso" | "habitos" | "perfil";
 
 interface Props {
   vista: Vista;
@@ -13,6 +13,7 @@ interface Props {
 
 const ITEMS: { id: Vista; label: string; Icon: typeof LayoutDashboard }[] = [
   { id: "inicio", label: "Inicio", Icon: LayoutDashboard },
+  { id: "diario", label: "Diario", Icon: NotebookPen },
   { id: "dieta", label: "Mi dieta", Icon: UtensilsCrossed },
   { id: "progreso", label: "Progreso", Icon: TrendingUp },
   { id: "habitos", label: "Hábitos", Icon: ListChecks },

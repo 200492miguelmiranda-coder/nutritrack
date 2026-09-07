@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Sidebar, { Vista } from "@/app/components/Sidebar";
 import ProfileModal from "@/app/components/ProfileModal";
 import DashboardView from "@/app/components/views/DashboardView";
+import DiarioView from "@/app/components/views/DiarioView";
 import DietView from "@/app/components/views/DietView";
 import ProgressView from "@/app/components/views/ProgressView";
 import HabitsView from "@/app/components/views/HabitsView";
@@ -42,7 +43,8 @@ export default function Home() {
           {vista === "inicio" && (
             <DashboardView nutri={nutri} plan={plan} onIrA={setVista} onCrearDieta={() => setModalAbierto(true)} />
           )}
-          {vista === "dieta" && <DietView plan={plan} onEditar={() => setModalAbierto(true)} />}
+          {vista === "diario" && <DiarioView nutri={nutri} />}
+          {vista === "dieta" && <DietView plan={plan} objetivos={nutri.data.objetivos} onEditar={() => setModalAbierto(true)} />}
           {vista === "progreso" && <ProgressView nutri={nutri} />}
           {vista === "habitos" && <HabitsView nutri={nutri} />}
           {vista === "perfil" && <ProfileView nutri={nutri} auth={auth} plan={plan} onEditar={() => setModalAbierto(true)} />}

@@ -1,13 +1,18 @@
 "use client";
 
-import { PlanDieta } from "@/app/lib/diet";
+import { PlanDieta, ObjetivosNutricionales } from "@/app/lib/diet";
 
 interface Props {
   plan: PlanDieta;
+  objetivos?: ObjetivosNutricionales;
   onEditar: () => void;
 }
 
-export default function DietPlan({ plan, onEditar }: Props) {
+function rango(r: [number, number]): string {
+  return r[0] === r[1] ? `${r[0]} g` : `${r[0]}–${r[1]} g`;
+}
+
+export default function DietPlan({ plan, objetivos, onEditar }: Props) {
   return (
     <section className="card dietPlan">
       <div className="cardHead">
@@ -20,12 +25,21 @@ export default function DietPlan({ plan, onEditar }: Props) {
 
       <p className="resumen">{plan.resumen}</p>
 
-      <div className="macros">
-        <div className="macro"><span>Calorías</span><strong>{plan.caloriasObjetivo}</strong><small>{plan.rangoCalorias[0]}–{plan.rangoCalorias[1]} kcal</small></div>
-        <div className="macro"><span>Proteína</span><strong>{plan.proteinaG} g</strong><small>músculo y saciedad</small></div>
-        <div className="macro"><span>Carbos</span><strong>{plan.carbohidratosG} g</strong><small>energía</small></div>
-        <div className="macro"><span>Grasas</span><strong>{plan.grasasG} g</strong><small>saludables</small></div>
-      </div>
+      {objetivos ? (
+        <div className="macros">
+          <div className="macro"><span>Calorías</span><strong>{objetivos.kcal}</strong><small>referencia diaria</small></div>
+          <div className="macro"><span>Proteína</span><strong>{rango(objetivos.proteina)}</strong><small>prioridad y saciedad</small></div>
+          <div className="macro"><span>Carbos</span><strong>{rango(objetivos.carbos)}</strong><small>energía</small></div>
+          <div className="macro"><span>Grasas</span><strong>{rango(objetivos.grasas)}</strong><small>saludables</small></div>
+        </div>
+      ) : (
+        <div className="macros">
+          <div className="macro"><span>Calorías</span><strong>{plan.caloriasObjetivo}</strong><small>{plan.rangoCalorias[0]}–{plan.rangoCalorias[1]} kcal</small></div>
+          <div className="macro"><span>Proteína</span><strong>{plan.proteinaG} g</strong><small>músculo y saciedad</small></div>
+          <div className="macro"><span>Carbos</span><strong>{plan.carbohidratosG} g</strong><small>energía</small></div>
+          <div className="macro"><span>Grasas</span><strong>{plan.grasasG} g</strong><small>saludables</small></div>
+        </div>
+      )}
 
       <div className="bloques">
         {plan.bloques.map((bloque) => (

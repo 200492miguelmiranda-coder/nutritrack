@@ -30,6 +30,20 @@ export default function ProgressView({ nutri }: Props) {
     { label: "Promedio/semana", valor: `${porSemana.toFixed(1)} kg` },
   ];
 
+  const logs = Object.values(data.logs);
+  const diasCaminados = logs.filter((l) => l.walked).length;
+  const diasAdherencia = logs.filter((l) => l.adherencia).length;
+  const conSueno = logs.filter((l) => l.horasSueno != null);
+  const suenoProm = conSueno.length ? conSueno.reduce((s, l) => s + (l.horasSueno as number), 0) / conSueno.length : null;
+  const cinturaUlt = logs.filter((l) => l.cinturaCm != null).sort((a, b) => b.date.localeCompare(a.date))[0]?.cinturaCm;
+
+  const otros = [
+    { label: "Cintura", valor: cinturaUlt != null ? `${cinturaUlt} cm` : "—" },
+    { label: "Sueño prom.", valor: suenoProm != null ? `${suenoProm.toFixed(1)} h` : "—" },
+    { label: "Días caminados", valor: `${diasCaminados}` },
+    { label: "Días de adherencia", valor: `${diasAdherencia}` },
+  ];
+
   const historial = Object.values(data.logs)
     .filter((l) => l.weight != null)
     .sort((a, b) => b.date.localeCompare(a.date));
@@ -42,6 +56,15 @@ export default function ProgressView({ nutri }: Props) {
 
       <section className="kpis">
         {kpis.map((k) => (
+          <article className="card kpi" key={k.label}>
+            <span>{k.label}</span>
+            <strong>{k.valor}</strong>
+          </article>
+        ))}
+      </section>
+
+      <section className="kpis">
+        {otros.map((k) => (
           <article className="card kpi" key={k.label}>
             <span>{k.label}</span>
             <strong>{k.valor}</strong>

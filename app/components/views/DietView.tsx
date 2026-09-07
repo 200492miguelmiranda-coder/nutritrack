@@ -2,14 +2,15 @@
 
 import { Sparkles } from "lucide-react";
 import DietPlan from "@/app/components/DietPlan";
-import { PlanDieta } from "@/app/lib/diet";
+import { PlanDieta, ObjetivosNutricionales } from "@/app/lib/diet";
 
 interface Props {
   plan: PlanDieta | null;
+  objetivos?: ObjetivosNutricionales;
   onEditar: () => void;
 }
 
-export default function DietView({ plan, onEditar }: Props) {
+export default function DietView({ plan, objetivos, onEditar }: Props) {
   return (
     <div className="dietView">
       <div className="head">
@@ -20,7 +21,7 @@ export default function DietView({ plan, onEditar }: Props) {
       </div>
 
       {plan ? (
-        <DietPlan plan={plan} onEditar={onEditar} />
+        <DietPlan plan={plan} objetivos={objetivos} onEditar={onEditar} />
       ) : (
         <section className="card empty">
           <Sparkles size={30} color="#2f5d46" />

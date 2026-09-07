@@ -5,7 +5,7 @@ import { Cloud, CloudOff, Mail, LogOut, Palette, Check } from "lucide-react";
 import { NutriData } from "@/app/hooks/useNutriData";
 import { Auth } from "@/app/hooks/useAuth";
 import WeightChart from "@/app/components/WeightChart";
-import { PlanDieta, ETIQUETAS_OBJETIVO, ETIQUETAS_PREFERENCIA, ETIQUETAS_ACTIVIDAD } from "@/app/lib/diet";
+import { PlanDieta, ObjetivosNutricionales, ETIQUETAS_OBJETIVO, ETIQUETAS_PREFERENCIA, ETIQUETAS_ACTIVIDAD } from "@/app/lib/diet";
 import { COLORES, FONDOS, FUENTES } from "@/app/lib/tema";
 
 interface Props {
@@ -25,16 +25,26 @@ function clasificarImc(imc: number): string {
 }
 
 export default function ProfileView({ nutri, auth, plan, onEditar }: Props) {
-  const { data, reiniciar, setTema, setAvatar, seriePeso, pesoActual, pesoObjetivo, bajado, progreso } = nutri;
+  const { data, reiniciar, setTema, setAvatar, setObjetivos, seriePeso, pesoActual, pesoObjetivo, bajado, progreso } = nutri;
   const p = data.perfil;
+  const obj = data.objetivos;
 
   const [email, setEmail] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editMetas, setEditMetas] = useState(false);
+  const [borrador, setBorrador] = useState<ObjetivosNutricionales>(obj ?? { kcal: 2000, proteina: [120, 150], carbos: [180, 220], grasas: [60, 80] });
 
   const imc = p ? pesoActual / Math.pow(p.estaturaCm / 100, 2) : null;
   const falta = Math.max(0, pesoActual - pesoObjetivo);
   const avatar = data.avatar || (p?.nombre?.trim()?.[0]?.toUpperCase() ?? "🙂");
+  const cintura = Object.values(data.logs).filter((l) => l.cinturaCm != null).sort((a, b) => b.date.localeCompare(a.date))[0]?.cinturaCm;
+
+  function guardarMetas() {
+    setObjetivos(borrador);
+    setEditMetas(false);
+  }
+  const rango = (r: [number, number]) => (r[0] === r[1] ? `${r[0]} g` : `${r[0]}–${r[1]} g`);
 
   async function enviarEnlace() {
     setError(null);
@@ -89,23 +99,61 @@ export default function ProfileView({ nutri, auth, plan, onEditar }: Props) {
 
             {/* Metas */}
             <section className="card bloque">
-              <p className="eyebrow">Tus metas</p><h2>Objetivo y dieta</h2>
+              <div className="bloqueHead"><div><p className="eyebrow">Tus metas</p><h2>Objetivo y nutrición</h2></div>
+                <button className="btn" onClick={() => { setBorrador(obj ?? borrador); setEditMetas((v) => !v); }}>{editMetas ? "Cancelar" : "Ajustar"}</button>
+              </div>
               <div className="metaPeso"><span>{p.pesoKg} kg</span><i>→</i><b>{pesoObjetivo} kg</b></div>
-              {plan ? (
-                <div className="macros">
-                  <div className="macro"><span>Calorías</span><b>{plan.caloriasObjetivo}</b></div>
-                  <div className="macro"><span>Proteína</span><b>{plan.proteinaG} g</b></div>
-                  <div className="macro"><span>Carbos</span><b>{plan.carbohidratosG} g</b></div>
-                  <div className="macro"><span>Grasas</span><b>{plan.grasasG} g</b></div>
+
+              {editMetas ? (
+                <div className="editMetas">
+                  <div className="ef"><label>Calorías (kcal)</label><input type="number" value={borrador.kcal} onChange={(e) => setBorrador({ ...borrador, kcal: Number(e.target.value) })} /></div>
+                  {(["proteina", "carbos", "grasas"] as const).map((k) => (
+                    <div className="ef" key={k}>
+                      <label>{k === "proteina" ? "Proteína" : k === "carbos" ? "Carbos" : "Grasas"} (g)</label>
+                      <div className="par">
+                        <input type="number" value={borrador[k][0]} onChange={(e) => setBorrador({ ...borrador, [k]: [Number(e.target.value), borrador[k][1]] })} />
+                        <span>–</span>
+                        <input type="number" value={borrador[k][1]} onChange={(e) => setBorrador({ ...borrador, [k]: [borrador[k][0], Number(e.target.value)] })} />
+                      </div>
+                    </div>
+                  ))}
+                  <button className="btn btn-primary guardar" onClick={guardarMetas}>Guardar metas</button>
                 </div>
-              ) : <p className="muted">Crea tu dieta para ver tus metas nutricionales.</p>}
+              ) : obj ? (
+                <div className="macros">
+                  <div className="macro"><span>Calorías</span><b>{obj.kcal}</b></div>
+                  <div className="macro"><span>Proteína</span><b>{rango(obj.proteina)}</b></div>
+                  <div className="macro"><span>Carbos</span><b>{rango(obj.carbos)}</b></div>
+                  <div className="macro"><span>Grasas</span><b>{rango(obj.grasas)}</b></div>
+                </div>
+              ) : <p className="muted">Ajusta tus metas nutricionales de referencia.</p>}
+
+              <p className="refNota">Son referencias iniciales, ajustables según tu peso, hambre, energía y adherencia. NutriTrack te acompaña, pero no sustituye a un profesional de salud: consulta a uno para decisiones médicas importantes.</p>
               <div className="chips">
                 <span className="chipTag">{ETIQUETAS_PREFERENCIA[p.preferencia]}</span>
                 <span className="chipTag">{ETIQUETAS_ACTIVIDAD[p.actividad].split(" (")[0]}</span>
-                <span className="chipTag">{p.comidasPorDia === 4 ? "3 + snack" : "3 comidas"}</span>
+                <span className="chipTag">{(p.comidasPrincipales ?? p.comidasPorDia)} comidas{p.aceptaSnack ? " + snack" : ""}</span>
               </div>
             </section>
           </div>
+
+          {/* Contexto */}
+          {(p.trabajoHorario || p.gustos?.length || p.estiloComida?.length || p.equipoCasa?.length || p.notas) && (
+            <section className="card contexto">
+              <p className="eyebrow">Tu contexto</p><h2>Cómo comes y vives</h2>
+              <div className="ctxGrid">
+                {p.horasSueno != null && <div className="ctx"><span>Sueño habitual</span><b>{p.horasSueno} h</b></div>}
+                {p.trabajoHorario && <div className="ctx"><span>Horario laboral</span><b>{p.trabajoHorario}</b></div>}
+                {p.tiempoPrep && <div className="ctx"><span>Tiempo para cocinar</span><b>{p.tiempoPrep}</b></div>}
+                {cintura != null && <div className="ctx"><span>Cintura (último)</span><b>{cintura} cm</b></div>}
+              </div>
+              {p.gustos?.length ? <div className="ctxTags"><label>Le gusta</label>{p.gustos.map((g) => <span key={g}>{g}</span>)}</div> : null}
+              {p.estiloComida?.length ? <div className="ctxTags"><label>Estilo</label>{p.estiloComida.map((g) => <span key={g}>{g}</span>)}</div> : null}
+              {p.equipoCasa?.length ? <div className="ctxTags"><label>En casa</label>{p.equipoCasa.map((g) => <span key={g}>{g}</span>)}</div> : null}
+              {p.equipoTrabajo?.length ? <div className="ctxTags"><label>En el trabajo</label>{p.equipoTrabajo.map((g) => <span key={g}>{g}</span>)}</div> : null}
+              {p.notas ? <p className="ctxNotas">{p.notas}</p> : null}
+            </section>
+          )}
         </>
       ) : (
         <section className="card empty">
@@ -217,6 +265,23 @@ export default function ProfileView({ nutri, auth, plan, onEditar }: Props) {
         .macro b{font-size:16px;font-family:var(--font-display),sans-serif}
         .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
         .chipTag{font-size:11px;background:var(--soft);color:var(--primary);padding:6px 11px;border-radius:20px;font-weight:600}
+        .refNota{font-size:12px;color:var(--muted-2);margin-top:14px;line-height:1.5}
+        .editMetas{display:flex;flex-direction:column;gap:12px}
+        .ef{display:flex;flex-direction:column;gap:6px}
+        .ef label{font-size:12px;color:var(--muted);font-weight:600}
+        .ef input{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2)}
+        .par{display:flex;align-items:center;gap:8px}
+        .par input{width:100%}
+        .guardar{align-self:flex-start;margin-top:4px}
+        .contexto{padding:22px}
+        .ctxGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:14px 0}
+        .ctx{background:var(--surface-2);border-radius:12px;padding:12px 14px}
+        .ctx span{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px;display:block}
+        .ctx b{font-size:14px;margin-top:4px;display:block}
+        .ctxTags{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:10px}
+        .ctxTags label{font-size:11px;color:var(--muted-2);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-right:4px}
+        .ctxTags span{font-size:12px;background:var(--soft);color:var(--primary);padding:5px 10px;border-radius:20px}
+        .ctxNotas{font-size:13px;color:var(--muted);line-height:1.55;margin-top:14px;padding-top:14px;border-top:1px solid #edf0ee}
         .empty{padding:34px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px}
         .empty p{max-width:400px;font-size:14px;line-height:1.55}
         .person{padding:22px}
