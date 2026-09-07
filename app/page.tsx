@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Sidebar, { Vista } from "@/app/components/Sidebar";
+import AuthGate from "@/app/components/AuthGate";
 import ProfileModal from "@/app/components/ProfileModal";
 import DashboardView from "@/app/components/views/DashboardView";
 import DiarioView from "@/app/components/views/DiarioView";
@@ -19,6 +20,34 @@ export default function Home() {
   const nutri = useNutriData(auth.sesion.userId);
   const [vista, setVista] = useState<Vista>("inicio");
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [invitado, setInvitado] = useState(false);
+  const [gateListo, setGateListo] = useState(false);
+
+  const INVITADO_KEY = "nutritrack:invitado";
+
+  useEffect(() => {
+    try {
+      setInvitado(localStorage.getItem(INVITADO_KEY) === "1");
+    } catch {
+      // sin acceso a localStorage
+    }
+    setGateListo(true);
+  }, []);
+
+  function usarSinCuenta() {
+    setInvitado(true);
+    try { localStorage.setItem(INVITADO_KEY, "1"); } catch { /* ignore */ }
+  }
+
+  function pedirEntrar() {
+    setInvitado(false);
+    try { localStorage.removeItem(INVITADO_KEY); } catch { /* ignore */ }
+  }
+
+  async function cerrarSesion() {
+    await auth.salir();
+    pedirEntrar();
+  }
 
   const plan = useMemo(() => (nutri.data.perfil ? generarPlan(nutri.data.perfil) : null), [nutri.data.perfil]);
 
@@ -34,9 +63,36 @@ export default function Home() {
     setModalAbierto(false);
   }
 
+  // Pantalla de carga breve para evitar parpadeo antes de saber el estado de sesión
+  if (!gateListo || auth.cargando) {
+    return (
+      <div className="loading">
+        <span className="spin" />
+        <style jsx>{`
+          .loading{min-height:100vh;display:grid;place-items:center}
+          .spin{width:34px;height:34px;border-radius:50%;border:3px solid var(--soft);border-top-color:var(--primary);animation:g 0.8s linear infinite}
+          @keyframes g{to{transform:rotate(360deg)}}
+        `}</style>
+      </div>
+    );
+  }
+
+  // Con Supabase disponible y sin sesión, invitamos a iniciar sesión
+  if (auth.disponible && !auth.sesion.userId && !invitado) {
+    return <AuthGate auth={auth} onInvitado={usarSinCuenta} />;
+  }
+
   return (
     <div className="app">
-      <Sidebar vista={vista} onVista={setVista} nombre={nutri.data.perfil?.nombre || undefined} />
+      <Sidebar
+        vista={vista}
+        onVista={setVista}
+        nombre={nutri.data.perfil?.nombre || undefined}
+        disponible={auth.disponible}
+        email={auth.sesion.email}
+        onEntrar={pedirEntrar}
+        onSalir={cerrarSesion}
+      />
 
       <main className="content">
         <div className="inner">

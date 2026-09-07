@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, UtensilsCrossed, NotebookPen, TrendingUp, ListChecks, UserRound } from "lucide-react";
+import { LayoutDashboard, UtensilsCrossed, NotebookPen, TrendingUp, ListChecks, UserRound, LogIn, LogOut } from "lucide-react";
 import { LogoMark, Wordmark } from "@/app/components/Logo";
 
 export type Vista = "inicio" | "diario" | "dieta" | "progreso" | "habitos" | "perfil";
@@ -9,6 +9,10 @@ interface Props {
   vista: Vista;
   onVista: (v: Vista) => void;
   nombre?: string;
+  disponible?: boolean;
+  email?: string | null;
+  onEntrar?: () => void;
+  onSalir?: () => void;
 }
 
 const ITEMS: { id: Vista; label: string; Icon: typeof LayoutDashboard }[] = [
@@ -20,7 +24,7 @@ const ITEMS: { id: Vista; label: string; Icon: typeof LayoutDashboard }[] = [
   { id: "perfil", label: "Perfil", Icon: UserRound },
 ];
 
-export default function Sidebar({ vista, onVista, nombre }: Props) {
+export default function Sidebar({ vista, onVista, nombre, disponible, email, onEntrar, onSalir }: Props) {
   return (
     <>
       {/* Barra lateral (escritorio) */}
@@ -41,7 +45,16 @@ export default function Sidebar({ vista, onVista, nombre }: Props) {
           ))}
         </nav>
         <div className="foot">
-          <span className="dotHealthy" /> Datos guardados de forma segura.
+          {email ? (
+            <div className="cuenta">
+              <div className="ce"><span className="dotHealthy" /><span className="mail">{email}</span></div>
+              <button className="cbtn" onClick={onSalir}><LogOut size={14} /> Salir</button>
+            </div>
+          ) : disponible ? (
+            <button className="entrar" onClick={onEntrar}><LogIn size={15} /> Entrar para guardar</button>
+          ) : (
+            <span className="segura"><span className="dotHealthy" /> Datos guardados en este dispositivo.</span>
+          )}
         </div>
       </aside>
 
@@ -72,8 +85,16 @@ export default function Sidebar({ vista, onVista, nombre }: Props) {
         .navItem:hover{background:var(--surface-2);color:var(--text)}
         .navItem.on{background:var(--soft);color:var(--primary)}
         .navItem.on .navIcon{background:var(--grad-brand);color:#fff}
-        .foot{margin-top:auto;font-size:11px;color:var(--muted-2);padding:0 8px;line-height:1.6;display:flex;align-items:center;gap:7px}
+        .foot{margin-top:auto;padding:0 4px}
+        .segura{font-size:11px;color:var(--muted-2);line-height:1.6;display:flex;align-items:center;gap:7px;padding:0 4px}
         .dotHealthy{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);flex-shrink:0}
+        .entrar{width:100%;display:flex;align-items:center;justify-content:center;gap:7px;padding:11px;border:1px solid var(--border);background:var(--soft);color:var(--primary);border-radius:11px;font-size:13px;font-weight:600}
+        .entrar:hover{background:var(--accent-soft)}
+        .cuenta{display:flex;flex-direction:column;gap:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:11px}
+        .ce{display:flex;align-items:center;gap:8px;min-width:0}
+        .mail{font-size:12px;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .cbtn{display:inline-flex;align-items:center;gap:6px;border:none;background:none;color:var(--muted);font-size:12px;font-weight:600;padding:0}
+        .cbtn:hover{color:var(--danger)}
         .mobileTop{display:none}
         .bottomNav{display:none}
         @media(max-width:860px){
