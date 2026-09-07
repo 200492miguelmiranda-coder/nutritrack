@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AppData,
   DayLog,
@@ -11,6 +11,7 @@ import {
   guardarDatos,
 } from "@/app/lib/storage";
 import { Perfil } from "@/app/lib/diet";
+import { supabase } from "@/app/lib/supabase";
 
 export interface PuntoPeso {
   fecha: string;
@@ -18,18 +19,66 @@ export interface PuntoPeso {
   valor: number;
 }
 
-export function useNutriData() {
+const TABLA = "estado_usuario";
+
+function tieneContenido(d: AppData): boolean {
+  return Boolean(d.perfil) || Object.keys(d.logs).length > 0;
+}
+
+export function useNutriData(userId: string | null) {
   const [data, setData] = useState<AppData>(datosPorDefecto());
   const [loaded, setLoaded] = useState(false);
+  const [sincronizando, setSincronizando] = useState(false);
+  const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cargandoNube = useRef(false);
 
+  // Carga inicial desde localStorage
   useEffect(() => {
     setData(cargarDatos());
     setLoaded(true);
   }, []);
 
+  // Guarda siempre en localStorage (caché local / modo sin sesión)
   useEffect(() => {
     if (loaded) guardarDatos(data);
   }, [data, loaded]);
+
+  // Al iniciar sesión: trae los datos de la nube. Si la nube está vacía,
+  // sube lo que haya en este dispositivo (primera migración).
+  useEffect(() => {
+    const sb = supabase;
+    if (!sb || !userId || !loaded) return;
+    let cancelado = false;
+    (async () => {
+      setSincronizando(true);
+      cargandoNube.current = true;
+      const { data: fila } = await sb.from(TABLA).select("data").eq("user_id", userId).maybeSingle();
+      if (cancelado) return;
+      const nube = fila?.data as AppData | undefined;
+      if (nube && tieneContenido(nube)) {
+        setData({ ...datosPorDefecto(), ...nube });
+      } else {
+        const local = cargarDatos();
+        await sb.from(TABLA).upsert({ user_id: userId, data: local, updated_at: new Date().toISOString() });
+        setData(local);
+      }
+      setSincronizando(false);
+      // Pequeño margen para que el setData anterior no dispare un upsert redundante
+      setTimeout(() => { cargandoNube.current = false; }, 300);
+    })();
+    return () => { cancelado = true; };
+  }, [userId, loaded]);
+
+  // Sube cambios a la nube (con retardo) cuando hay sesión
+  useEffect(() => {
+    const sb = supabase;
+    if (!sb || !userId || !loaded || cargandoNube.current) return;
+    if (debounce.current) clearTimeout(debounce.current);
+    debounce.current = setTimeout(() => {
+      sb.from(TABLA).upsert({ user_id: userId, data, updated_at: new Date().toISOString() });
+    }, 800);
+    return () => { if (debounce.current) clearTimeout(debounce.current); };
+  }, [data, userId, loaded]);
 
   const hoy = fechaKey();
   const logHoy: DayLog = data.logs[hoy] ?? diaVacio(hoy);
@@ -42,16 +91,11 @@ export function useNutriData() {
   }, [hoy]);
 
   const guardarPerfil = useCallback((perfil: Perfil) => {
-    setData((d) => ({
-      ...d,
-      perfil,
-      creado: d.perfil ? d.creado : fechaKey(),
-    }));
+    setData((d) => ({ ...d, perfil, creado: d.perfil ? d.creado : fechaKey() }));
   }, []);
 
   const reiniciar = useCallback(() => setData(datosPorDefecto()), []);
 
-  // Serie de peso para la gráfica: parte del peso inicial y agrega los registros
   const seriePeso = useMemo<PuntoPeso[]>(() => {
     const puntos: PuntoPeso[] = [];
     if (data.perfil) {
@@ -76,6 +120,7 @@ export function useNutriData() {
   return {
     data,
     loaded,
+    sincronizando,
     logHoy,
     actualizarHoy,
     guardarPerfil,

@@ -9,10 +9,12 @@ import ProgressView from "@/app/components/views/ProgressView";
 import HabitsView from "@/app/components/views/HabitsView";
 import ProfileView from "@/app/components/views/ProfileView";
 import { useNutriData } from "@/app/hooks/useNutriData";
+import { useAuth } from "@/app/hooks/useAuth";
 import { Perfil, generarPlan } from "@/app/lib/diet";
 
 export default function Home() {
-  const nutri = useNutriData();
+  const auth = useAuth();
+  const nutri = useNutriData(auth.sesion.userId);
   const [vista, setVista] = useState<Vista>("inicio");
   const [modalAbierto, setModalAbierto] = useState(false);
 
@@ -35,7 +37,7 @@ export default function Home() {
           {vista === "dieta" && <DietView plan={plan} onEditar={() => setModalAbierto(true)} />}
           {vista === "progreso" && <ProgressView nutri={nutri} />}
           {vista === "habitos" && <HabitsView nutri={nutri} />}
-          {vista === "perfil" && <ProfileView nutri={nutri} onEditar={() => setModalAbierto(true)} />}
+          {vista === "perfil" && <ProfileView nutri={nutri} auth={auth} onEditar={() => setModalAbierto(true)} />}
         </div>
       </main>
 
