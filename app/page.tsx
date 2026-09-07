@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Sidebar, { Vista } from "@/app/components/Sidebar";
 import ProfileModal from "@/app/components/ProfileModal";
 import DashboardView from "@/app/components/views/DashboardView";
@@ -11,6 +11,7 @@ import ProfileView from "@/app/components/views/ProfileView";
 import { useNutriData } from "@/app/hooks/useNutriData";
 import { useAuth } from "@/app/hooks/useAuth";
 import { Perfil, generarPlan } from "@/app/lib/diet";
+import { TEMA_POR_DEFECTO, temaVars } from "@/app/lib/tema";
 
 export default function Home() {
   const auth = useAuth();
@@ -19,6 +20,13 @@ export default function Home() {
   const [modalAbierto, setModalAbierto] = useState(false);
 
   const plan = useMemo(() => (nutri.data.perfil ? generarPlan(nutri.data.perfil) : null), [nutri.data.perfil]);
+
+  // Aplica el tema (colores, fondo, fuente) a todo el documento
+  useEffect(() => {
+    const vars = temaVars(nutri.data.tema ?? TEMA_POR_DEFECTO);
+    const raiz = document.documentElement;
+    Object.entries(vars).forEach(([k, v]) => raiz.style.setProperty(k, v));
+  }, [nutri.data.tema]);
 
   function guardarPerfil(nuevo: Perfil) {
     nutri.guardarPerfil(nuevo);
@@ -37,7 +45,7 @@ export default function Home() {
           {vista === "dieta" && <DietView plan={plan} onEditar={() => setModalAbierto(true)} />}
           {vista === "progreso" && <ProgressView nutri={nutri} />}
           {vista === "habitos" && <HabitsView nutri={nutri} />}
-          {vista === "perfil" && <ProfileView nutri={nutri} auth={auth} onEditar={() => setModalAbierto(true)} />}
+          {vista === "perfil" && <ProfileView nutri={nutri} auth={auth} plan={plan} onEditar={() => setModalAbierto(true)} />}
         </div>
       </main>
 

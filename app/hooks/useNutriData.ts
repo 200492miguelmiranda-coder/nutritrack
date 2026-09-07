@@ -94,6 +94,14 @@ export function useNutriData(userId: string | null) {
     setData((d) => ({ ...d, perfil, creado: d.perfil ? d.creado : fechaKey() }));
   }, []);
 
+  const setTema = useCallback((patch: Partial<AppData["tema"]>) => {
+    setData((d) => ({ ...d, tema: { ...d.tema, ...patch } }));
+  }, []);
+
+  const setAvatar = useCallback((avatar: string) => {
+    setData((d) => ({ ...d, avatar }));
+  }, []);
+
   const reiniciar = useCallback(() => setData(datosPorDefecto()), []);
 
   const seriePeso = useMemo<PuntoPeso[]>(() => {
@@ -124,6 +132,8 @@ export function useNutriData(userId: string | null) {
     logHoy,
     actualizarHoy,
     guardarPerfil,
+    setTema,
+    setAvatar,
     reiniciar,
     seriePeso,
     pesoInicial,

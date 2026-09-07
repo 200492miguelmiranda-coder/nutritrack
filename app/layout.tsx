@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, Bricolage_Grotesque } from "next/font/google";
+import { Plus_Jakarta_Sans, Bricolage_Grotesque, Fredoka, Sora } from "next/font/google";
 import "./globals.css";
 
 const fontBody = Plus_Jakarta_Sans({
@@ -8,9 +8,23 @@ const fontBody = Plus_Jakarta_Sans({
   display: "swap",
 });
 
-const fontDisplay = Bricolage_Grotesque({
+const fontBricolage = Bricolage_Grotesque({
   subsets: ["latin"],
-  variable: "--font-display",
+  variable: "--font-bricolage",
+  display: "swap",
+  weight: ["600", "700", "800"],
+});
+
+const fontFredoka = Fredoka({
+  subsets: ["latin"],
+  variable: "--font-fredoka",
+  display: "swap",
+  weight: ["500", "600", "700"],
+});
+
+const fontSora = Sora({
+  subsets: ["latin"],
+  variable: "--font-sora",
   display: "swap",
   weight: ["600", "700", "800"],
 });
@@ -25,8 +39,9 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const fuentes = `${fontBody.variable} ${fontBricolage.variable} ${fontFredoka.variable} ${fontSora.variable}`;
   return (
-    <html lang="es" className={`${fontBody.variable} ${fontDisplay.variable}`}>
+    <html lang="es" className={fuentes}>
       <body>{children}</body>
     </html>
   );

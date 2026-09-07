@@ -2,6 +2,7 @@
 // Guarda el perfil y un registro diario por fecha en localStorage.
 
 import { Perfil } from "./diet";
+import { Tema, TEMA_POR_DEFECTO } from "./tema";
 
 export interface DayLog {
   date: string; // YYYY-MM-DD
@@ -17,6 +18,8 @@ export interface AppData {
   logs: Record<string, DayLog>;
   metaKg: number; // primer objetivo de kg a bajar
   creado: string; // fecha ISO de creación del perfil
+  tema: Tema; // personalización visual
+  avatar?: string; // emoji de avatar (opcional)
 }
 
 export const STORAGE_KEY = "nutritrack:data:v2";
@@ -34,7 +37,7 @@ export function diaVacio(date: string): DayLog {
 }
 
 export function datosPorDefecto(): AppData {
-  return { perfil: null, logs: {}, metaKg: 8, creado: fechaKey() };
+  return { perfil: null, logs: {}, metaKg: 8, creado: fechaKey(), tema: { ...TEMA_POR_DEFECTO } };
 }
 
 export function cargarDatos(): AppData {
