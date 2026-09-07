@@ -41,13 +41,13 @@ export default function DashboardView({ nutri, plan, onIrA, onCrearDieta }: Prop
       </div>
 
       {/* Progreso */}
-      <section className="card progress">
+      <section className="progress">
         <div className="progressInfo">
-          <p className="eyebrow">Objetivo</p>
+          <p className="peyebrow">Objetivo</p>
           <div className="nums"><b>{pesoInicial} kg</b><span>→</span><b>{pesoObjetivo} kg</b></div>
-          <p className="muted small">Has bajado <strong>{bajado.toFixed(1)} kg</strong> de {data.metaKg} kg.</p>
+          <p className="small">Has bajado <strong>{bajado.toFixed(1)} kg</strong> de {data.metaKg} kg.</p>
         </div>
-        <div className="ring" style={{ background: `conic-gradient(var(--primary) ${progreso * 3.6}deg, #e8eeea 0deg)` }}>
+        <div className="ring" style={{ background: `conic-gradient(#ffffff ${progreso * 3.6}deg, rgba(255,255,255,0.22) 0deg)` }}>
           <div className="ringHole"><b>{progreso.toFixed(0)}%</b><small>meta</small></div>
         </div>
       </section>
@@ -55,7 +55,7 @@ export default function DashboardView({ nutri, plan, onIrA, onCrearDieta }: Prop
       {/* Registro rápido */}
       <section className="stats">
         <article className="card stat">
-          <div className="statTop"><Scale size={17} /><span>Peso hoy</span></div>
+          <div className="statTop"><span className="chip c1"><Scale size={16} /></span><span>Peso hoy</span></div>
           <strong>{pesoDeHoy} kg</strong>
           <div className="rowBtns">
             <button className="btn" onClick={() => actualizarHoy({ weight: Math.max(1, Math.round((pesoDeHoy - 0.5) * 10) / 10) })}><Minus size={14} /></button>
@@ -64,7 +64,7 @@ export default function DashboardView({ nutri, plan, onIrA, onCrearDieta }: Prop
         </article>
 
         <article className="card stat">
-          <div className="statTop"><Droplets size={17} /><span>Agua</span></div>
+          <div className="statTop"><span className="chip c2"><Droplets size={16} /></span><span>Agua</span></div>
           <strong>{(logHoy.waterMl / 1000).toFixed(1)} L</strong>
           <div className="rowBtns">
             <button className="btn" onClick={() => actualizarHoy({ waterMl: Math.max(0, logHoy.waterMl - 250) })}><Minus size={14} /></button>
@@ -73,7 +73,7 @@ export default function DashboardView({ nutri, plan, onIrA, onCrearDieta }: Prop
         </article>
 
         <article className="card stat">
-          <div className="statTop"><CupSoda size={17} /><span>Refresco</span></div>
+          <div className="statTop"><span className="chip c3"><CupSoda size={16} /></span><span>Refresco</span></div>
           <strong>{logHoy.sodaMl} ml</strong>
           <div className="rowBtns">
             <button className="btn" onClick={() => actualizarHoy({ sodaMl: Math.max(0, logHoy.sodaMl - 250) })}><Minus size={14} /></button>
@@ -82,7 +82,7 @@ export default function DashboardView({ nutri, plan, onIrA, onCrearDieta }: Prop
         </article>
 
         <article className="card stat">
-          <div className="statTop"><Footprints size={17} /><span>Hábitos</span></div>
+          <div className="statTop"><span className="chip c4"><Footprints size={16} /></span><span>Hábitos</span></div>
           <strong>{habitos}/3</strong>
           <div className="rowBtns">
             <button className={logHoy.walked ? "btn btn-primary" : "btn"} onClick={() => actualizarHoy({ walked: !logHoy.walked })}>
@@ -151,18 +151,27 @@ export default function DashboardView({ nutri, plan, onIrA, onCrearDieta }: Prop
         .head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
         .head h1{font-size:26px;letter-spacing:-.6px}
         .small{font-size:13px}
-        .progress{padding:22px;display:flex;align-items:center;justify-content:space-between;gap:20px}
-        .nums{display:flex;align-items:baseline;gap:10px;margin:2px 0 8px}
-        .nums b{font-size:30px;letter-spacing:-1px}
-        .nums span{color:var(--muted-2)}
-        .ring{width:96px;height:96px;border-radius:50%;display:grid;place-items:center;flex-shrink:0}
-        .ringHole{width:72px;height:72px;background:var(--surface);border-radius:50%;display:grid;place-items:center;text-align:center}
-        .ringHole b{font-size:20px}
-        .ringHole small{font-size:10px;color:var(--muted-2);text-transform:uppercase;letter-spacing:.5px}
+        .progress{padding:24px;display:flex;align-items:center;justify-content:space-between;gap:20px;background:var(--grad-brand);color:#fff;border-radius:var(--radius);box-shadow:var(--shadow-lg);position:relative;overflow:hidden}
+        .progress::after{content:"";position:absolute;right:-40px;top:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.08)}
+        .peyebrow{font-size:11px;letter-spacing:1.4px;color:rgba(255,255,255,.7);font-weight:700;text-transform:uppercase;margin:0 0 6px}
+        .progress .small{color:rgba(255,255,255,.85)}
+        .progress .small strong{color:#fff}
+        .nums{display:flex;align-items:baseline;gap:10px;margin:2px 0 8px;font-family:var(--font-display),sans-serif}
+        .nums b{font-size:32px;letter-spacing:-1px}
+        .nums span{color:rgba(255,255,255,.6)}
+        .ring{width:100px;height:100px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;position:relative;z-index:1}
+        .ringHole{width:74px;height:74px;background:var(--primary);border-radius:50%;display:grid;place-items:center;text-align:center;color:#fff}
+        .ringHole b{font-size:21px;font-family:var(--font-display),sans-serif}
+        .ringHole small{font-size:10px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.5px}
         .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
         .stat{padding:16px}
-        .statTop{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px}
-        .stat strong{display:block;font-size:26px;margin:8px 0 12px;letter-spacing:-.5px}
+        .statTop{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px}
+        .chip{display:grid;place-items:center;width:28px;height:28px;border-radius:9px;flex-shrink:0}
+        .chip.c1{background:#e4f5ec;color:#2f7d5c}
+        .chip.c2{background:#e2f0ff;color:#3b7bd0}
+        .chip.c3{background:#fdeede;color:#c1922f}
+        .chip.c4{background:#efe8fb;color:#7c5cc0}
+        .stat strong{display:block;font-size:26px;margin:10px 0 12px;letter-spacing:-.5px;font-family:var(--font-display),sans-serif}
         .rowBtns{display:flex;gap:8px}
         .rowBtns .btn{padding:8px 10px}
         .cols{display:grid;grid-template-columns:1.6fr 1fr;gap:18px}
