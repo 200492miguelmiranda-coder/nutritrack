@@ -1,0 +1,18 @@
+# dependencias
+/node_modules
+
+# builds de Next.js
+/.next
+/out
+
+# archivos generados
+AGENTS.md
+CLAUDE.md
+
+# logs y variables de entorno
+*.log
+.env*
+!.env.example
+
+# sistema
+.DS_Store
