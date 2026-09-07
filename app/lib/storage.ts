@@ -3,6 +3,7 @@
 
 import { Perfil, ObjetivosNutricionales } from "./diet";
 import { Tema, TEMA_POR_DEFECTO } from "./tema";
+import type { HabitoDef } from "./habitos";
 
 // Un alimento registrado en lenguaje natural, con estimación aproximada de calorías.
 export interface RegistroComida {
@@ -41,6 +42,7 @@ export interface AppData {
   tema: Tema; // personalización visual
   avatar?: string; // emoji de avatar (opcional)
   objetivos?: ObjetivosNutricionales; // metas nutricionales de referencia (ajustables)
+  habitosPersonalizados?: HabitoDef[]; // hábitos creados por el usuario
 }
 
 export const STORAGE_KEY = "nutritrack:data:v2";

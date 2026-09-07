@@ -12,6 +12,7 @@ import {
 } from "@/app/lib/storage";
 import { Perfil, ObjetivosNutricionales } from "@/app/lib/diet";
 import { RegistroComida } from "@/app/lib/storage";
+import type { HabitoDef } from "@/app/lib/habitos";
 import { supabase } from "@/app/lib/supabase";
 
 export interface PuntoPeso {
@@ -124,6 +125,14 @@ export function useNutriData(userId: string | null) {
     setData((d) => ({ ...d, avatar }));
   }, []);
 
+  const agregarHabito = useCallback((def: HabitoDef) => {
+    setData((d) => ({ ...d, habitosPersonalizados: [...(d.habitosPersonalizados ?? []), def] }));
+  }, []);
+
+  const quitarHabito = useCallback((id: string) => {
+    setData((d) => ({ ...d, habitosPersonalizados: (d.habitosPersonalizados ?? []).filter((h) => h.id !== id) }));
+  }, []);
+
   const reiniciar = useCallback(() => setData(datosPorDefecto()), []);
 
   const seriePeso = useMemo<PuntoPeso[]>(() => {
@@ -159,6 +168,8 @@ export function useNutriData(userId: string | null) {
     quitarRegistro,
     setTema,
     setAvatar,
+    agregarHabito,
+    quitarHabito,
     reiniciar,
     seriePeso,
     pesoInicial,

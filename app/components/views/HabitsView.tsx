@@ -1,19 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Flame, Check, Trophy } from "lucide-react";
+import { Flame, Check, Trophy, Plus, Trash2 } from "lucide-react";
 import { NutriData } from "@/app/hooks/useNutriData";
-import { diaVacio, etiquetaCorta, ultimasFechas } from "@/app/lib/storage";
-import { HABITOS, UMBRAL_RACHA, mensajeAnimo, calcularRacha, mejorRacha } from "@/app/lib/habitos";
+import { etiquetaCorta, ultimasFechas } from "@/app/lib/storage";
+import { HABITOS, UMBRAL_RACHA, mensajeAnimo, calcularRacha, mejorRacha, HabitoDef } from "@/app/lib/habitos";
 
 interface Props {
   nutri: NutriData;
 }
 
+const EMOJIS = ["✅", "⭐", "🏃", "🥦", "🍵", "🧘", "📵", "🌙", "🚭", "📖", "💊", "🧴", "🚴", "💪", "🧹", "😊"];
+
 export default function HabitsView({ nutri }: Props) {
-  const { data, logHoy, actualizarHoy } = nutri;
+  const { data, logHoy, actualizarHoy, agregarHabito, quitarHabito } = nutri;
 
   const [animo, setAnimo] = useState<string | null>(null);
+  const [nuevoEmoji, setNuevoEmoji] = useState("✅");
+  const [nuevoTitulo, setNuevoTitulo] = useState("");
+  const [creando, setCreando] = useState(false);
 
   useEffect(() => {
     if (!animo) return;
@@ -21,10 +26,14 @@ export default function HabitsView({ nutri }: Props) {
     return () => clearTimeout(t);
   }, [animo]);
 
+  const personalizados = data.habitosPersonalizados ?? [];
+  const todos: HabitoDef[] = [...HABITOS, ...personalizados];
+  const idsPersonalizados = new Set(personalizados.map((h) => h.id));
+
   const hechos = logHoy.habitos ?? [];
-  const total = HABITOS.length;
+  const total = todos.length;
   const completados = hechos.length;
-  const pct = Math.round((completados / total) * 100);
+  const pct = total ? Math.round((completados / total) * 100) : 0;
 
   function cumplidosDe(fecha: string): number {
     return (data.logs[fecha]?.habitos ?? []).length;
@@ -43,13 +52,21 @@ export default function HabitsView({ nutri }: Props) {
     if (!estaba) setAnimo(mensajeAnimo());
   }
 
+  function crear() {
+    const titulo = nuevoTitulo.trim();
+    if (!titulo) return;
+    agregarHabito({ id: `custom-${Date.now()}`, emoji: nuevoEmoji, titulo });
+    setNuevoTitulo("");
+    setNuevoEmoji("✅");
+    setCreando(false);
+  }
+
   return (
     <div className="hab">
       <div className="head"><div><p className="eyebrow">Constancia</p><h1>Hábitos</h1></div>
         <span className="badge"><Flame size={13} /> {racha} día{racha === 1 ? "" : "s"}</span>
       </div>
 
-      {/* Mensaje de ánimo */}
       {animo && <div className="animo">🎉 {animo}</div>}
 
       {/* Racha + progreso */}
@@ -67,7 +84,6 @@ export default function HabitsView({ nutri }: Props) {
         </div>
       </section>
 
-      {/* Progreso de hoy */}
       <section className="card progCard">
         <div className="progHead"><span className="eyebrow">Hoy</span><b>{pct}%</b></div>
         <div className="barra"><i style={{ width: `${pct}%` }} /></div>
@@ -75,16 +91,35 @@ export default function HabitsView({ nutri }: Props) {
 
       {/* Tabla de hábitos */}
       <section className="card tabla">
-        <div className="cardHead"><div><p className="eyebrow">Marca lo que logres</p><h2>Tus buenos hábitos</h2></div></div>
+        <div className="cardHead"><div><p className="eyebrow">Marca lo que logres</p><h2>Tus buenos hábitos</h2></div>
+          <button className="btn" onClick={() => setCreando((v) => !v)}><Plus size={15} /> Nuevo</button>
+        </div>
+
+        {creando && (
+          <div className="crear">
+            <div className="emojiPick">
+              {EMOJIS.map((e) => <button key={e} className={nuevoEmoji === e ? "ep on" : "ep"} onClick={() => setNuevoEmoji(e)}>{e}</button>)}
+            </div>
+            <div className="crearRow">
+              <input placeholder="Ej. Estirar 5 minutos, meditar, leer…" value={nuevoTitulo} onChange={(e) => setNuevoTitulo(e.target.value)} onKeyDown={(e) => e.key === "Enter" && crear()} />
+              <button className="btn btn-primary" onClick={crear} disabled={!nuevoTitulo.trim()}>Agregar</button>
+            </div>
+          </div>
+        )}
+
         <div className="lista">
-          {HABITOS.map((h) => {
+          {todos.map((h) => {
             const done = hechos.includes(h.id);
+            const custom = idsPersonalizados.has(h.id);
             return (
-              <button key={h.id} className={done ? "fila done" : "fila"} onClick={() => toggle(h.id)}>
+              <div key={h.id} className={done ? "fila done" : "fila"} onClick={() => toggle(h.id)} role="button" tabIndex={0}>
                 <span className="hemoji">{h.emoji}</span>
-                <span className="htxt"><b>{h.titulo}</b>{h.meta && <small>{h.meta}</small>}</span>
+                <span className="htxt"><b>{h.titulo}</b>{h.meta && <small>{h.meta}</small>}{custom && <small className="mio">Hábito personalizado</small>}</span>
+                {custom && (
+                  <button className="delH" onClick={(e) => { e.stopPropagation(); quitarHabito(h.id); }} aria-label="Eliminar hábito"><Trash2 size={15} /></button>
+                )}
                 <span className={done ? "box on" : "box"}>{done && <Check size={16} strokeWidth={3} />}</span>
-              </button>
+              </div>
             );
           })}
         </div>
@@ -131,10 +166,17 @@ export default function HabitsView({ nutri }: Props) {
         .barra{height:10px;background:var(--soft);border-radius:99px;overflow:hidden}
         .barra i{display:block;height:100%;background:var(--grad-brand);border-radius:99px;transition:width .3s ease}
         .tabla,.semana{padding:22px}
-        .cardHead{margin-bottom:16px}
+        .cardHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
         h2{font-size:20px;letter-spacing:-.4px}
+        .crear{background:var(--surface-2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px}
+        .emojiPick{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+        .ep{width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:var(--surface);font-size:17px}
+        .ep.on{border-color:var(--primary);box-shadow:0 0 0 2px var(--accent-soft);background:var(--soft)}
+        .crearRow{display:flex;gap:8px}
+        .crearRow input{flex:1;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
+        .crearRow input:focus{outline:none;border-color:var(--primary)}
         .lista{display:flex;flex-direction:column;gap:10px}
-        .fila{display:flex;align-items:center;gap:14px;padding:14px 16px;border:1px solid var(--border);border-radius:14px;background:var(--surface);text-align:left;width:100%;transition:all .15s}
+        .fila{display:flex;align-items:center;gap:14px;padding:14px 16px;border:1px solid var(--border);border-radius:14px;background:var(--surface);text-align:left;width:100%;transition:all .15s;cursor:pointer}
         .fila:hover{border-color:#cfdad3;background:var(--surface-2)}
         .fila.done{background:var(--soft);border-color:var(--primary)}
         .hemoji{font-size:22px;flex-shrink:0}
@@ -142,6 +184,9 @@ export default function HabitsView({ nutri }: Props) {
         .htxt b{font-size:14px}
         .fila.done .htxt b{color:var(--primary)}
         .htxt small{font-size:12px;color:var(--muted-2)}
+        .htxt small.mio{color:var(--primary-2);font-weight:600}
+        .delH{border:none;background:none;color:var(--muted-2);display:grid;place-items:center;padding:4px;flex-shrink:0}
+        .delH:hover{color:var(--danger)}
         .box{width:28px;height:28px;border-radius:9px;border:2px solid var(--border);display:grid;place-items:center;color:#fff;flex-shrink:0}
         .box.on{background:var(--primary);border-color:var(--primary)}
         .dias{display:flex;justify-content:space-between;gap:6px}
@@ -151,7 +196,7 @@ export default function HabitsView({ nutri }: Props) {
         .dia small{font-size:11px;color:var(--muted-2)}
         .dia small.hoy{color:var(--primary);font-weight:700}
         .pie{font-size:12px;color:var(--muted-2);margin-top:14px;line-height:1.5}
-        @media(max-width:600px){.rachaCard{flex-direction:column;align-items:stretch}.rachaExtra{justify-content:space-between}}
+        @media(max-width:600px){.rachaCard{flex-direction:column;align-items:stretch}.rachaExtra{justify-content:space-between}.crearRow{flex-direction:column}}
       `}</style>
     </div>
   );
